@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>GPS Stopař</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap');
+
+  :root {
+    --bg: #0a0e1a;
+    --panel: #111827;
+    --border: #1e2d45;
+    --accent: #00e5ff;
+    --accent2: #ff6b35;
+    --green: #00ff9d;
+    --text: #e2e8f0;
+    --muted: #4a5568;
+    --danger: #ff4444;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  header {
+    padding: 10px 16px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 1000;
+    flex-shrink: 0;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-icon {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
+  .logo-text {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  .logo-text span { color: var(--accent); }
+
+  .status-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    background: var(--border);
+    border: 1px solid var(--border);
+    transition: all 0.3s;
+  }
+
+  .status-badge.active {
+    background: rgba(0, 255, 157, 0.1);
+    border-color: var(--green);
+    color: var(--green);
+  }
+
+  .status-badge.waiting {
+    background: rgba(0, 229, 255, 0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--muted);
+  }
+
+  .status-badge.active .status-dot {
+    background: var(--green);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  .status-badge.waiting .status-dot {
+    background: var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  #map {
+    flex: 1;
+    width: 100%;
+    z-index: 1;
+  }
+
+  .bottom-panel {
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    padding: 12px 16px;
+    z-index: 1000;
+    flex-shrink: 0;
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .stat {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 10px;
+    text-align: center;
+  }
+
+  .stat-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .stat-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-top: 2px;
+    white-space: nowrap;
+  }
+
+  .stat-value.green { color: var(--green); }
+  .stat-value.orange { color: var(--accent2); }
+
+  .btn-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 12px 8px;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    letter-spacing: 0.3px;
+  }
+
+  .btn:active { transform: scale(0.97); }
+
+  .btn-start {
+    background: linear-gradient(135deg, var(--green), #00c876);
+    color: #000;
+  }
+
+  .btn-stop {
+    background: linear-gradient(135deg, var(--danger), #cc0000);
+    color: #fff;
+  }
+
+  .btn-export {
+    background: linear-gradient(135deg, var(--accent), #0099bb);
+    color: #000;
+    flex: 0.7;
+  }
+
+  .btn-clear {
+    background: var(--border);
+    color: var(--muted);
+    flex: 0.5;
+  }
+
+  .btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .accuracy-bar {
+    height: 2px;
+    background: var(--border);
+    border-radius: 1px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+
+  .accuracy-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--danger), var(--accent2), var(--green));
+    border-radius: 1px;
+    transition: width 0.5s;
+    width: 0%;
+  }
+
+  .coords-bar {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 8px;
+    height: 14px;
+  }
+
+  /* Custom Leaflet overrides */
+  .leaflet-container { background: #0a0e1a; }
+
+  .custom-marker {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 3px solid white;
+    box-shadow: 0 0 0 2px var(--accent), 0 0 12px var(--accent);
+    animation: markerPulse 2s infinite;
+  }
+
+  @keyframes markerPulse {
+    0%, 100% { box-shadow: 0 0 0 2px var(--accent), 0 0 12px var(--accent); }
+    50% { box-shadow: 0 0 0 4px var(--accent), 0 0 20px var(--accent); }
+  }
+
+  .leaflet-control-zoom {
+    border: 1px solid var(--border) !important;
+  }
+
+  .leaflet-control-zoom a {
+    background: var(--panel) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+  }
+
+  .toast {
+    position: fixed;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: var(--panel);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    z-index: 9999;
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .toast.error {
+    border-color: var(--danger);
+    color: var(--danger);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🛰</div>
+    <div class="logo-text">GPS <span>Stopař</span></div>
+  </div>
+  <div class="status-badge" id="statusBadge">
+    <div class="status-dot"></div>
+    <span id="statusText">READY</span>
+  </div>
+</header>
+
+<div id="map"></div>
+
+<div class="bottom-panel">
+  <div class="accuracy-bar">
+    <div class="accuracy-fill" id="accuracyFill"></div>
+  </div>
+  <div class="coords-bar" id="coordsBar">Čeká na GPS signál…</div>
+  <div class="stats-row">
+    <div class="stat">
+      <div class="stat-label">Body trasy</div>
+      <div class="stat-value green" id="statPoints">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Vzdálenost</div>
+      <div class="stat-value" id="statDist">0.0 km</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Přesnost</div>
+      <div class="stat-value orange" id="statAccuracy">—</div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-start" id="btnStart" onclick="startTracking()">▶ Start</button>
+    <button class="btn btn-stop" id="btnStop" onclick="stopTracking()" disabled>⏹ Stop</button>
+    <button class="btn btn-export" id="btnExport" onclick="exportGPX()" disabled>⬇ GPX</button>
+    <button class="btn btn-clear" id="btnClear" onclick="clearTrack()">✕</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── MAP SETUP ──────────────────────────────────────────────────────────────
+  const map = L.map('map', { zoomControl: true, attributionControl: false });
+
+  // Dark tile layer
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19,
+    subdomains: 'abcd'
+  }).addTo(map);
+
+  map.setView([50.0755, 14.4378], 13); // Praha jako výchozí pohled
+
+  // ── STATE ──────────────────────────────────────────────────────────────────
+  let isTracking = false;
+  let watchId = null;
+  let trackPoints = [];   // [{lat, lon, alt, time, accuracy}]
+  let totalDist = 0;
+  let polyline = null;
+  let currentMarker = null;
+  let startMarker = null;
+  let firstFix = true;
+
+  // ── CUSTOM MARKER ICON ─────────────────────────────────────────────────────
+  const currentIcon = L.divIcon({
+    className: '',
+    html: '<div class="custom-marker"></div>',
+    iconSize: [14, 14],
+    iconAnchor: [7, 7]
+  });
+
+  const startIcon = L.divIcon({
+    className: '',
+    html: '<div style="width:12px;height:12px;border-radius:50%;background:#00ff9d;border:3px solid white;box-shadow:0 0 0 2px #00ff9d;"></div>',
+    iconSize: [12, 12],
+    iconAnchor: [6, 6]
+  });
+
+  // ── TRACKING ───────────────────────────────────────────────────────────────
+  function startTracking() {
+    if (!navigator.geolocation) {
+      showToast('GPS není podporováno v tomto prohlížeči', true);
+      return;
+    }
+
+    isTracking = true;
+    firstFix = true;
+
+    document.getElementById('btnStart').disabled = true;
+    document.getElementById('btnStop').disabled = false;
+    setStatus('waiting', 'HLEDÁM GPS');
+
+    watchId = navigator.geolocation.watchPosition(
+      onPosition,
+      onError,
+      {
+        enableHighAccuracy: true,
+        maximumAge: 2000,
+        timeout: 15000
+      }
+    );
+  }
+
+  function stopTracking() {
+    if (watchId !== null) {
+      navigator.geolocation.clearWatch(watchId);
+      watchId = null;
+    }
+    isTracking = false;
+
+    document.getElementById('btnStart').disabled = false;
+    document.getElementById('btnStop').disabled = true;
+    setStatus('idle', 'ZASTAVENO');
+
+    if (trackPoints.length > 0) {
+      document.getElementById('btnExport').disabled = false;
+    }
+    showToast(`Zaznamenáno ${trackPoints.length} bodů`);
+  }
+
+  function onPosition(pos) {
+    const { latitude: lat, longitude: lon, altitude: alt, accuracy } = pos.coords;
+    const time = new Date(pos.timestamp);
+
+    // Update status on first fix
+    if (firstFix) {
+      firstFix = false;
+      setStatus('active', 'NAHRÁVÁM');
+      showToast('GPS fix získán! Nahrávám trasu…');
+    }
+
+    // Store point (only if moved > 3m or first point)
+    const last = trackPoints[trackPoints.length - 1];
+    let moved = 0;
+    if (last) {
+      moved = haversine(last.lat, last.lon, lat, lon);
+    }
+
+    if (!last || moved > 3) {
+      if (last) totalDist += moved;
+      trackPoints.push({ lat, lon, alt, time, accuracy });
+
+      // Draw on map
+      const latlngs = trackPoints.map(p => [p.lat, p.lon]);
+
+      if (polyline) {
+        polyline.setLatLngs(latlngs);
+      } else {
+        polyline = L.polyline(latlngs, {
+          color: '#00e5ff',
+          weight: 4,
+          opacity: 0.9,
+          smoothFactor: 1.5
+        }).addTo(map);
+      }
+
+      // Start marker
+      if (trackPoints.length === 1) {
+        startMarker = L.marker([lat, lon], { icon: startIcon }).addTo(map);
+      }
+
+      // Update stats
+      document.getElementById('statPoints').textContent = trackPoints.length;
+      updateDistDisplay();
+    }
+
+    // Current position marker (always update)
+    if (currentMarker) {
+      currentMarker.setLatLng([lat, lon]);
+    } else {
+      currentMarker = L.marker([lat, lon], { icon: currentIcon }).addTo(map);
+    }
+
+    // Auto-follow
+    map.panTo([lat, lon], { animate: true, duration: 0.5 });
+
+    // UI updates
+    document.getElementById('coordsBar').textContent =
+      `${lat.toFixed(6)}, ${lon.toFixed(6)}  ±${Math.round(accuracy)}m`;
+
+    const accVal = Math.round(accuracy);
+    document.getElementById('statAccuracy').textContent = accVal + ' m';
+
+    // Accuracy bar: 0m=100%, 50m+=0%
+    const accPct = Math.max(0, Math.min(100, 100 - (accuracy / 50 * 100)));
+    document.getElementById('accuracyFill').style.width = accPct + '%';
+  }
+
+  function onError(err) {
+    let msg = 'Chyba GPS';
+    if (err.code === 1) msg = 'Přístup ke GPS zamítnut – povolte polohu v prohlížeči';
+    else if (err.code === 2) msg = 'Signál GPS nedostupný';
+    else if (err.code === 3) msg = 'GPS timeout – zkuste znovu';
+    showToast(msg, true);
+    setStatus('idle', 'CHYBA GPS');
+  }
+
+  function clearTrack() {
+    stopTracking();
+    trackPoints = [];
+    totalDist = 0;
+
+    if (polyline) { map.removeLayer(polyline); polyline = null; }
+    if (currentMarker) { map.removeLayer(currentMarker); currentMarker = null; }
+    if (startMarker) { map.removeLayer(startMarker); startMarker = null; }
+
+    document.getElementById('statPoints').textContent = '0';
+    document.getElementById('statDist').textContent = '0.0 km';
+    document.getElementById('statAccuracy').textContent = '—';
+    document.getElementById('coordsBar').textContent = 'Čeká na GPS signál…';
+    document.getElementById('accuracyFill').style.width = '0%';
+    document.getElementById('btnExport').disabled = true;
+    document.getElementById('btnStart').disabled = false;
+    setStatus('idle', 'READY');
+    showToast('Trasa smazána');
+  }
+
+  // ── GPX EXPORT ─────────────────────────────────────────────────────────────
+  function exportGPX() {
+    if (trackPoints.length === 0) {
+      showToast('Žádná trasa k exportu', true);
+      return;
+    }
+
+    const name = `GPS_Stopa_${formatDateForFile(new Date())}`;
+
+    let gpx = `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="GPS Stopař"
+     xmlns="http://www.topografix.com/GPX/1/1"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:schemaLocation="http://www.topografix.com/GPX/1/1
+       http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>${name}</name>
+    <time>${trackPoints[0].time.toISOString()}</time>
+  </metadata>
+  <trk>
+    <name>${name}</name>
+    <trkseg>\n`;
+
+    for (const pt of trackPoints) {
+      const altTag = pt.alt != null ? `\n        <ele>${pt.alt.toFixed(1)}</ele>` : '';
+      gpx += `      <trkpt lat="${pt.lat.toFixed(8)}" lon="${pt.lon.toFixed(8)}">${altTag}
+        <time>${pt.time.toISOString()}</time>
+      </trkpt>\n`;
+    }
+
+    gpx += `    </trkseg>
+  </trk>
+</gpx>`;
+
+    const blob = new Blob([gpx], { type: 'application/gpx+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${name}.gpx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showToast(`Uloženo ${trackPoints.length} bodů jako ${name}.gpx`);
+  }
+
+  // ── HELPERS ────────────────────────────────────────────────────────────────
+  function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371000;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 +
+              Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+              Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+
+  function updateDistDisplay() {
+    const km = totalDist / 1000;
+    document.getElementById('statDist').textContent =
+      km < 1 ? Math.round(totalDist) + ' m' : km.toFixed(2) + ' km';
+  }
+
+  function formatDateForFile(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}_${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}`;
+  }
+
+  function setStatus(state, text) {
+    const badge = document.getElementById('statusBadge');
+    badge.className = 'status-badge ' + (state === 'active' ? 'active' : state === 'waiting' ? 'waiting' : '');
+    document.getElementById('statusText').textContent = text;
+  }
+
+  let toastTimer = null;
+  function showToast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show' + (isError ? ' error' : '');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.className = 'toast'; }, 3000);
+  }
+
+  // Prevent screen sleep on supported browsers
+  let wakeLock = null;
+  async function requestWakeLock() {
+    try {
+      if ('wakeLock' in navigator) {
+        wakeLock = await navigator.wakeLock.request('screen');
+      }
+    } catch(e) {}
+  }
+  requestWakeLock();
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') requestWakeLock();
+  });
+</script>
+</body>
+</html>
