@@ -44,260 +44,159 @@
     flex-shrink: 0;
   }
 
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
+  .logo { display: flex; align-items: center; gap: 10px; }
   .logo-icon {
-    width: 32px;
-    height: 32px;
+    width: 32px; height: 32px;
     background: linear-gradient(135deg, var(--accent), var(--accent2));
     border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     font-size: 16px;
   }
-
-  .logo-text {
-    font-size: 18px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-  }
-
+  .logo-text { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
   .logo-text span { color: var(--accent); }
 
   .status-badge {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 5px 12px;
-    border-radius: 20px;
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 12px; border-radius: 20px;
     font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    font-weight: 700;
-    background: var(--border);
-    border: 1px solid var(--border);
+    font-size: 11px; font-weight: 700;
+    background: var(--border); border: 1px solid var(--border);
     transition: all 0.3s;
   }
-
-  .status-badge.active {
-    background: rgba(0, 255, 157, 0.1);
-    border-color: var(--green);
-    color: var(--green);
-  }
-
-  .status-badge.waiting {
-    background: rgba(0, 229, 255, 0.1);
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
-  .status-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--muted);
-  }
-
-  .status-badge.active .status-dot {
-    background: var(--green);
-    animation: pulse 1.5s ease-in-out infinite;
-  }
-
-  .status-badge.waiting .status-dot {
-    background: var(--accent);
-    animation: pulse 2s ease-in-out infinite;
-  }
+  .status-badge.active  { background: rgba(0,255,157,0.1); border-color: var(--green); color: var(--green); }
+  .status-badge.waiting { background: rgba(0,229,255,0.1); border-color: var(--accent); color: var(--accent); }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+  .status-badge.active  .status-dot { background: var(--green); animation: pulse 1.5s infinite; }
+  .status-badge.waiting .status-dot { background: var(--accent); animation: pulse 2s infinite; }
 
   @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.8); }
+    0%,100% { opacity:1; transform:scale(1); }
+    50%      { opacity:0.4; transform:scale(0.8); }
   }
 
-  #map {
-    flex: 1;
-    width: 100%;
-    z-index: 1;
-  }
+  #map { flex: 1; width: 100%; z-index: 1; }
 
   .bottom-panel {
     background: var(--panel);
     border-top: 1px solid var(--border);
     padding: 12px 16px;
-    z-index: 1000;
-    flex-shrink: 0;
+    z-index: 1000; flex-shrink: 0;
   }
 
   .stats-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    margin-bottom: 12px;
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 8px; margin-bottom: 12px;
   }
-
   .stat {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 8px 10px;
-    text-align: center;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 8px 10px; text-align: center;
   }
-
   .stat-label {
-    font-family: 'Space Mono', monospace;
-    font-size: 9px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    font-family: 'Space Mono', monospace; font-size: 9px;
+    color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;
   }
-
   .stat-value {
-    font-family: 'Space Mono', monospace;
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--accent);
-    margin-top: 2px;
-    white-space: nowrap;
+    font-family: 'Space Mono', monospace; font-size: 16px;
+    font-weight: 700; color: var(--accent); margin-top: 2px; white-space: nowrap;
   }
-
-  .stat-value.green { color: var(--green); }
+  .stat-value.green  { color: var(--green); }
   .stat-value.orange { color: var(--accent2); }
 
-  .btn-row {
-    display: flex;
-    gap: 8px;
-  }
+  .btn-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .btn-row2 { display: flex; gap: 8px; }
 
   .btn {
-    flex: 1;
-    padding: 12px 8px;
-    border: none;
-    border-radius: 10px;
-    font-family: 'Syne', sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    letter-spacing: 0.3px;
+    flex: 1; padding: 11px 8px; border: none; border-radius: 10px;
+    font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center;
+    gap: 5px; letter-spacing: 0.3px;
   }
-
   .btn:active { transform: scale(0.97); }
+  .btn-start   { background: linear-gradient(135deg, var(--green), #00c876); color: #000; }
+  .btn-stop    { background: linear-gradient(135deg, var(--danger), #cc0000); color: #fff; }
+  .btn-export  { background: linear-gradient(135deg, var(--accent), #0099bb); color: #000; }
+  .btn-import  { background: linear-gradient(135deg, #a855f7, #7c3aed); color: #fff; }
+  .btn-center  { background: var(--border); color: var(--accent); flex: 0 0 44px; font-size: 18px; padding: 11px 0; }
+  .btn-clear   { background: var(--border); color: var(--muted); flex: 0 0 44px; font-size: 16px; padding: 11px 0; }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
-  .btn-start {
-    background: linear-gradient(135deg, var(--green), #00c876);
-    color: #000;
-  }
-
-  .btn-stop {
-    background: linear-gradient(135deg, var(--danger), #cc0000);
-    color: #fff;
-  }
-
-  .btn-export {
-    background: linear-gradient(135deg, var(--accent), #0099bb);
-    color: #000;
-    flex: 0.7;
-  }
-
-  .btn-clear {
-    background: var(--border);
-    color: var(--muted);
-    flex: 0.5;
-  }
-
-  .btn:disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
-  }
-
-  .accuracy-bar {
-    height: 2px;
-    background: var(--border);
-    border-radius: 1px;
-    margin-bottom: 10px;
-    overflow: hidden;
-  }
-
+  .accuracy-bar { height: 2px; background: var(--border); border-radius: 1px; margin-bottom: 10px; overflow: hidden; }
   .accuracy-fill {
     height: 100%;
     background: linear-gradient(90deg, var(--danger), var(--accent2), var(--green));
-    border-radius: 1px;
-    transition: width 0.5s;
-    width: 0%;
+    border-radius: 1px; transition: width 0.5s; width: 0%;
   }
 
   .coords-bar {
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    color: var(--muted);
-    text-align: center;
-    margin-bottom: 8px;
-    height: 14px;
+    font-family: 'Space Mono', monospace; font-size: 10px;
+    color: var(--muted); text-align: center; margin-bottom: 8px; height: 14px;
   }
 
-  /* Custom Leaflet overrides */
-  .leaflet-container { background: #0a0e1a; }
-
+  /* Leaflet */
+  .leaflet-container { background: #1a2035; }
   .custom-marker {
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: var(--accent);
-    border: 3px solid white;
-    box-shadow: 0 0 0 2px var(--accent), 0 0 12px var(--accent);
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--accent); border: 3px solid white;
+    box-shadow: 0 0 0 2px var(--accent), 0 0 14px var(--accent);
     animation: markerPulse 2s infinite;
   }
-
   @keyframes markerPulse {
-    0%, 100% { box-shadow: 0 0 0 2px var(--accent), 0 0 12px var(--accent); }
-    50% { box-shadow: 0 0 0 4px var(--accent), 0 0 20px var(--accent); }
+    0%,100% { box-shadow: 0 0 0 2px var(--accent), 0 0 12px var(--accent); }
+    50%      { box-shadow: 0 0 0 5px var(--accent), 0 0 22px var(--accent); }
   }
+  .leaflet-control-zoom { border: 1px solid var(--border) !important; }
+  .leaflet-control-zoom a { background: var(--panel) !important; color: var(--text) !important; border-color: var(--border) !important; }
 
-  .leaflet-control-zoom {
-    border: 1px solid var(--border) !important;
-  }
-
-  .leaflet-control-zoom a {
-    background: var(--panel) !important;
-    color: var(--text) !important;
-    border-color: var(--border) !important;
-  }
-
+  /* Toast */
   .toast {
-    position: fixed;
-    top: 70px;
-    left: 50%;
+    position: fixed; top: 70px; left: 50%;
     transform: translateX(-50%) translateY(-20px);
-    background: var(--panel);
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    padding: 10px 20px;
-    border-radius: 20px;
-    font-family: 'Space Mono', monospace;
-    font-size: 12px;
-    z-index: 9999;
-    opacity: 0;
-    transition: all 0.3s;
-    pointer-events: none;
-    white-space: nowrap;
+    background: var(--panel); border: 1px solid var(--accent);
+    color: var(--accent); padding: 10px 20px; border-radius: 20px;
+    font-family: 'Space Mono', monospace; font-size: 12px;
+    z-index: 9999; opacity: 0; transition: all 0.3s;
+    pointer-events: none; white-space: nowrap; max-width: 90vw;
+    text-align: center; overflow: hidden; text-overflow: ellipsis;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.error { border-color: var(--danger); color: var(--danger); }
+
+  /* Permission modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+    z-index: 9000; display: flex; align-items: center; justify-content: center;
+    padding: 20px; backdrop-filter: blur(4px);
+  }
+  .modal-overlay.hidden { display: none; }
+  .modal {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px; max-width: 340px; width: 100%;
+  }
+  .modal h2 { font-size: 18px; font-weight: 800; margin-bottom: 6px; color: var(--accent); }
+  .modal .modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+  .modal-step {
+    display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px;
+  }
+  .step-num {
+    min-width: 26px; height: 26px; border-radius: 50%;
+    background: var(--accent); color: #000;
+    font-family: 'Space Mono', monospace; font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .step-text { font-size: 13px; line-height: 1.5; padding-top: 3px; }
+  .step-text strong { color: var(--text); }
+  .step-text span { color: var(--muted); }
+  .modal-btn {
+    width: 100%; margin-top: 20px; padding: 13px;
+    background: linear-gradient(135deg, var(--accent), #0099bb);
+    border: none; border-radius: 10px; color: #000;
+    font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800;
+    cursor: pointer; letter-spacing: 0.3px;
   }
 
-  .toast.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-
-  .toast.error {
-    border-color: var(--danger);
-    color: var(--danger);
-  }
+  /* Hidden file input */
+  #gpxInput { display: none; }
 </style>
 </head>
 <body>
@@ -316,10 +215,9 @@
 <div id="map"></div>
 
 <div class="bottom-panel">
-  <div class="accuracy-bar">
-    <div class="accuracy-fill" id="accuracyFill"></div>
-  </div>
+  <div class="accuracy-bar"><div class="accuracy-fill" id="accuracyFill"></div></div>
   <div class="coords-bar" id="coordsBar">Čeká na GPS signál…</div>
+
   <div class="stats-row">
     <div class="stat">
       <div class="stat-label">Body trasy</div>
@@ -334,51 +232,88 @@
       <div class="stat-value orange" id="statAccuracy">—</div>
     </div>
   </div>
+
   <div class="btn-row">
-    <button class="btn btn-start" id="btnStart" onclick="startTracking()">▶ Start</button>
-    <button class="btn btn-stop" id="btnStop" onclick="stopTracking()" disabled>⏹ Stop</button>
+    <button class="btn btn-start"  id="btnStart"  onclick="startTracking()">▶ Start</button>
+    <button class="btn btn-stop"   id="btnStop"   onclick="stopTracking()" disabled>⏹ Stop</button>
     <button class="btn btn-export" id="btnExport" onclick="exportGPX()" disabled>⬇ GPX</button>
-    <button class="btn btn-clear" id="btnClear" onclick="clearTrack()">✕</button>
+    <button class="btn btn-center" id="btnCenter" onclick="centerOnPosition()" title="Centrovat">◎</button>
+    <button class="btn btn-clear"  onclick="clearTrack()" title="Smazat">✕</button>
+  </div>
+  <div class="btn-row2">
+    <button class="btn btn-import" onclick="document.getElementById('gpxInput').click()">📂 Načíst GPX soubor</button>
   </div>
 </div>
 
+<input type="file" id="gpxInput" accept=".gpx,application/gpx+xml" onchange="importGPX(event)">
+
 <div class="toast" id="toast"></div>
+
+<!-- GPS permission guide modal -->
+<div class="modal-overlay hidden" id="permModal">
+  <div class="modal">
+    <h2>📍 Poloha je blokována</h2>
+    <p class="modal-sub">Jak povolit GPS v Chrome na Androidu:</p>
+
+    <div class="modal-step">
+      <div class="step-num">1</div>
+      <div class="step-text">Klikni na <strong>🔒 ikonu zámku</strong> vlevo od adresy v prohlížeči</div>
+    </div>
+    <div class="modal-step">
+      <div class="step-num">2</div>
+      <div class="step-text">Vyber <strong>Oprávnění webu</strong> nebo <strong>Nastavení webu</strong></div>
+    </div>
+    <div class="modal-step">
+      <div class="step-num">3</div>
+      <div class="step-text">Najdi <strong>Poloha</strong> a přepni na <strong>Povolit</strong></div>
+    </div>
+    <div class="modal-step">
+      <div class="step-num">4</div>
+      <div class="step-text"><span>Obnov stránku a zkus znovu</span></div>
+    </div>
+
+    <button class="modal-btn" onclick="closePermModal()">Rozumím, zavřít</button>
+  </div>
+</div>
 
 <script>
   // ── MAP SETUP ──────────────────────────────────────────────────────────────
-  const map = L.map('map', { zoomControl: true, attributionControl: false });
+  const map = L.map('map', { zoomControl: true, attributionControl: true });
 
-  // Dark tile layer
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  // OpenStreetMap – spolehlivý, funguje vždy
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
-    subdomains: 'abcd'
+    attribution: '© OpenStreetMap'
   }).addTo(map);
 
-  map.setView([50.0755, 14.4378], 13); // Praha jako výchozí pohled
+  map.setView([50.0755, 14.4378], 13);
 
   // ── STATE ──────────────────────────────────────────────────────────────────
-  let isTracking = false;
-  let watchId = null;
-  let trackPoints = [];   // [{lat, lon, alt, time, accuracy}]
-  let totalDist = 0;
-  let polyline = null;
+  let isTracking  = false;
+  let watchId     = null;
+  let trackPoints = [];
+  let totalDist   = 0;
+  let polyline    = null;
+  let importedPolyline = null;
   let currentMarker = null;
-  let startMarker = null;
+  let startMarker   = null;
   let firstFix = true;
+  let lastKnownPos = null;
+  let autoFollow = true;
 
-  // ── CUSTOM MARKER ICON ─────────────────────────────────────────────────────
+  // Stop auto-follow when user manually pans
+  map.on('dragstart', () => { autoFollow = false; });
+
+  // ── ICONS ──────────────────────────────────────────────────────────────────
   const currentIcon = L.divIcon({
     className: '',
     html: '<div class="custom-marker"></div>',
-    iconSize: [14, 14],
-    iconAnchor: [7, 7]
+    iconSize: [16, 16], iconAnchor: [8, 8]
   });
-
   const startIcon = L.divIcon({
     className: '',
     html: '<div style="width:12px;height:12px;border-radius:50%;background:#00ff9d;border:3px solid white;box-shadow:0 0 0 2px #00ff9d;"></div>',
-    iconSize: [12, 12],
-    iconAnchor: [6, 6]
+    iconSize: [12, 12], iconAnchor: [6, 6]
   });
 
   // ── TRACKING ───────────────────────────────────────────────────────────────
@@ -387,154 +322,125 @@
       showToast('GPS není podporováno v tomto prohlížeči', true);
       return;
     }
-
     isTracking = true;
-    firstFix = true;
-
+    firstFix   = true;
+    autoFollow = true;
     document.getElementById('btnStart').disabled = true;
-    document.getElementById('btnStop').disabled = false;
+    document.getElementById('btnStop').disabled  = false;
     setStatus('waiting', 'HLEDÁM GPS');
 
-    watchId = navigator.geolocation.watchPosition(
-      onPosition,
-      onError,
-      {
-        enableHighAccuracy: true,
-        maximumAge: 2000,
-        timeout: 15000
-      }
-    );
+    watchId = navigator.geolocation.watchPosition(onPosition, onError, {
+      enableHighAccuracy: true,
+      maximumAge: 2000,
+      timeout: 20000
+    });
   }
 
   function stopTracking() {
-    if (watchId !== null) {
-      navigator.geolocation.clearWatch(watchId);
-      watchId = null;
-    }
+    if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
     isTracking = false;
-
     document.getElementById('btnStart').disabled = false;
-    document.getElementById('btnStop').disabled = true;
+    document.getElementById('btnStop').disabled  = true;
     setStatus('idle', 'ZASTAVENO');
-
-    if (trackPoints.length > 0) {
-      document.getElementById('btnExport').disabled = false;
-    }
+    if (trackPoints.length > 0) document.getElementById('btnExport').disabled = false;
     showToast(`Zaznamenáno ${trackPoints.length} bodů`);
   }
 
   function onPosition(pos) {
     const { latitude: lat, longitude: lon, altitude: alt, accuracy } = pos.coords;
     const time = new Date(pos.timestamp);
+    lastKnownPos = [lat, lon];
 
-    // Update status on first fix
     if (firstFix) {
       firstFix = false;
       setStatus('active', 'NAHRÁVÁM');
       showToast('GPS fix získán! Nahrávám trasu…');
     }
 
-    // Store point (only if moved > 3m or first point)
+    // Zaznamenej bod jen pokud se pohnulo >3 m
     const last = trackPoints[trackPoints.length - 1];
-    let moved = 0;
-    if (last) {
-      moved = haversine(last.lat, last.lon, lat, lon);
-    }
+    const moved = last ? haversine(last.lat, last.lon, lat, lon) : 0;
 
     if (!last || moved > 3) {
       if (last) totalDist += moved;
       trackPoints.push({ lat, lon, alt, time, accuracy });
 
-      // Draw on map
       const latlngs = trackPoints.map(p => [p.lat, p.lon]);
-
       if (polyline) {
         polyline.setLatLngs(latlngs);
       } else {
-        polyline = L.polyline(latlngs, {
-          color: '#00e5ff',
-          weight: 4,
-          opacity: 0.9,
-          smoothFactor: 1.5
-        }).addTo(map);
+        polyline = L.polyline(latlngs, { color: '#00e5ff', weight: 4, opacity: 0.9, smoothFactor: 1.5 }).addTo(map);
       }
+      if (trackPoints.length === 1) startMarker = L.marker([lat, lon], { icon: startIcon }).addTo(map);
 
-      // Start marker
-      if (trackPoints.length === 1) {
-        startMarker = L.marker([lat, lon], { icon: startIcon }).addTo(map);
-      }
-
-      // Update stats
       document.getElementById('statPoints').textContent = trackPoints.length;
       updateDistDisplay();
     }
 
-    // Current position marker (always update)
-    if (currentMarker) {
-      currentMarker.setLatLng([lat, lon]);
-    } else {
-      currentMarker = L.marker([lat, lon], { icon: currentIcon }).addTo(map);
-    }
+    // Aktuální poloha
+    if (currentMarker) currentMarker.setLatLng([lat, lon]);
+    else currentMarker = L.marker([lat, lon], { icon: currentIcon }).addTo(map);
 
-    // Auto-follow
-    map.panTo([lat, lon], { animate: true, duration: 0.5 });
+    // Auto-sledování
+    if (autoFollow) map.panTo([lat, lon], { animate: true, duration: 0.5 });
 
-    // UI updates
-    document.getElementById('coordsBar').textContent =
-      `${lat.toFixed(6)}, ${lon.toFixed(6)}  ±${Math.round(accuracy)}m`;
-
-    const accVal = Math.round(accuracy);
-    document.getElementById('statAccuracy').textContent = accVal + ' m';
-
-    // Accuracy bar: 0m=100%, 50m+=0%
+    // UI
+    document.getElementById('coordsBar').textContent = `${lat.toFixed(6)}, ${lon.toFixed(6)}  ±${Math.round(accuracy)}m`;
+    document.getElementById('statAccuracy').textContent = Math.round(accuracy) + ' m';
     const accPct = Math.max(0, Math.min(100, 100 - (accuracy / 50 * 100)));
     document.getElementById('accuracyFill').style.width = accPct + '%';
   }
 
   function onError(err) {
-    let msg = 'Chyba GPS';
-    if (err.code === 1) msg = 'Přístup ke GPS zamítnut – povolte polohu v prohlížeči';
-    else if (err.code === 2) msg = 'Signál GPS nedostupný';
-    else if (err.code === 3) msg = 'GPS timeout – zkuste znovu';
-    showToast(msg, true);
     setStatus('idle', 'CHYBA GPS');
+    document.getElementById('btnStart').disabled = false;
+    document.getElementById('btnStop').disabled  = true;
+    isTracking = false;
+    if (err.code === 1) {
+      showPermModal();
+    } else if (err.code === 2) {
+      showToast('Signál GPS nedostupný – jste venku?', true);
+    } else {
+      showToast('GPS timeout – zkuste znovu', true);
+    }
+  }
+
+  function centerOnPosition() {
+    if (lastKnownPos) {
+      autoFollow = true;
+      map.panTo(lastKnownPos, { animate: true, duration: 0.5 });
+    } else {
+      showToast('Poloha zatím není k dispozici', true);
+    }
   }
 
   function clearTrack() {
     stopTracking();
-    trackPoints = [];
-    totalDist = 0;
-
-    if (polyline) { map.removeLayer(polyline); polyline = null; }
-    if (currentMarker) { map.removeLayer(currentMarker); currentMarker = null; }
-    if (startMarker) { map.removeLayer(startMarker); startMarker = null; }
-
-    document.getElementById('statPoints').textContent = '0';
-    document.getElementById('statDist').textContent = '0.0 km';
+    trackPoints = []; totalDist = 0;
+    if (polyline)       { map.removeLayer(polyline); polyline = null; }
+    if (currentMarker)  { map.removeLayer(currentMarker); currentMarker = null; }
+    if (startMarker)    { map.removeLayer(startMarker); startMarker = null; }
+    if (importedPolyline) { map.removeLayer(importedPolyline); importedPolyline = null; }
+    document.getElementById('statPoints').textContent   = '0';
+    document.getElementById('statDist').textContent     = '0.0 km';
     document.getElementById('statAccuracy').textContent = '—';
-    document.getElementById('coordsBar').textContent = 'Čeká na GPS signál…';
+    document.getElementById('coordsBar').textContent    = 'Čeká na GPS signál…';
     document.getElementById('accuracyFill').style.width = '0%';
     document.getElementById('btnExport').disabled = true;
-    document.getElementById('btnStart').disabled = false;
+    document.getElementById('btnStart').disabled  = false;
     setStatus('idle', 'READY');
     showToast('Trasa smazána');
   }
 
   // ── GPX EXPORT ─────────────────────────────────────────────────────────────
   function exportGPX() {
-    if (trackPoints.length === 0) {
-      showToast('Žádná trasa k exportu', true);
-      return;
-    }
-
+    if (trackPoints.length === 0) { showToast('Žádná trasa k exportu', true); return; }
     const name = `GPS_Stopa_${formatDateForFile(new Date())}`;
-
     let gpx = `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1" creator="GPS Stopař"
      xmlns="http://www.topografix.com/GPX/1/1"
      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-     xsi:schemaLocation="http://www.topografix.com/GPX/1/1
-       http://www.topografix.com/GPX/1/1/gpx.xsd">
+     xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
   <metadata>
     <name>${name}</name>
     <time>${trackPoints[0].time.toISOString()}</time>
@@ -542,46 +448,72 @@
   <trk>
     <name>${name}</name>
     <trkseg>\n`;
-
     for (const pt of trackPoints) {
       const altTag = pt.alt != null ? `\n        <ele>${pt.alt.toFixed(1)}</ele>` : '';
       gpx += `      <trkpt lat="${pt.lat.toFixed(8)}" lon="${pt.lon.toFixed(8)}">${altTag}
         <time>${pt.time.toISOString()}</time>
       </trkpt>\n`;
     }
+    gpx += `    </trkseg>\n  </trk>\n</gpx>`;
+    downloadBlob(gpx, `${name}.gpx`, 'application/gpx+xml');
+    showToast(`Uloženo ${trackPoints.length} bodů → ${name}.gpx`);
+  }
 
-    gpx += `    </trkseg>
-  </trk>
-</gpx>`;
+  // ── GPX IMPORT ─────────────────────────────────────────────────────────────
+  function importGPX(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(e.target.result, 'application/xml');
+        const trkpts = xml.querySelectorAll('trkpt');
+        if (trkpts.length === 0) { showToast('GPX neobsahuje žádné body', true); return; }
 
-    const blob = new Blob([gpx], { type: 'application/gpx+xml' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${name}.gpx`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+        const latlngs = [];
+        trkpts.forEach(pt => {
+          const lat = parseFloat(pt.getAttribute('lat'));
+          const lon = parseFloat(pt.getAttribute('lon'));
+          if (!isNaN(lat) && !isNaN(lon)) latlngs.push([lat, lon]);
+        });
 
-    showToast(`Uloženo ${trackPoints.length} bodů jako ${name}.gpx`);
+        if (importedPolyline) map.removeLayer(importedPolyline);
+        importedPolyline = L.polyline(latlngs, {
+          color: '#ff6b35', weight: 3, opacity: 0.85,
+          dashArray: '8, 5', smoothFactor: 1.5
+        }).addTo(map);
+
+        map.fitBounds(importedPolyline.getBounds(), { padding: [20, 20] });
+
+        // Délka importované trasy
+        let dist = 0;
+        for (let i = 1; i < latlngs.length; i++) dist += haversine(latlngs[i-1][0], latlngs[i-1][1], latlngs[i][0], latlngs[i][1]);
+        const km = (dist/1000).toFixed(2);
+        showToast(`Načteno ${latlngs.length} bodů, ${km} km`);
+
+        const name = xml.querySelector('trk > name');
+        if (name) setStatus('idle', name.textContent.substring(0,12).toUpperCase());
+      } catch(err) {
+        showToast('Chyba při čtení GPX souboru', true);
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = ''; // reset pro opakované načtení
   }
 
   // ── HELPERS ────────────────────────────────────────────────────────────────
   function haversine(lat1, lon1, lat2, lon2) {
     const R = 6371000;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat/2)**2 +
-              Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
-              Math.sin(dLon/2)**2;
+    const dLat = (lat2-lat1)*Math.PI/180;
+    const dLon = (lon2-lon1)*Math.PI/180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   }
 
   function updateDistDisplay() {
-    const km = totalDist / 1000;
-    document.getElementById('statDist').textContent =
-      km < 1 ? Math.round(totalDist) + ' m' : km.toFixed(2) + ' km';
+    const km = totalDist/1000;
+    document.getElementById('statDist').textContent = km < 1 ? Math.round(totalDist)+' m' : km.toFixed(2)+' km';
   }
 
   function formatDateForFile(d) {
@@ -590,32 +522,38 @@
 
   function setStatus(state, text) {
     const badge = document.getElementById('statusBadge');
-    badge.className = 'status-badge ' + (state === 'active' ? 'active' : state === 'waiting' ? 'waiting' : '');
+    badge.className = 'status-badge ' + (state==='active' ? 'active' : state==='waiting' ? 'waiting' : '');
     document.getElementById('statusText').textContent = text;
   }
 
   let toastTimer = null;
-  function showToast(msg, isError = false) {
+  function showToast(msg, isError=false) {
     const t = document.getElementById('toast');
     t.textContent = msg;
     t.className = 'toast show' + (isError ? ' error' : '');
     if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { t.className = 'toast'; }, 3000);
+    toastTimer = setTimeout(() => { t.className = 'toast'; }, 3500);
   }
 
-  // Prevent screen sleep on supported browsers
+  function showPermModal()  { document.getElementById('permModal').classList.remove('hidden'); }
+  function closePermModal() { document.getElementById('permModal').classList.add('hidden'); }
+
+  function downloadBlob(content, filename, mime) {
+    const blob = new Blob([content], { type: mime });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+  }
+
+  // Zabraň uspání displeje
   let wakeLock = null;
   async function requestWakeLock() {
-    try {
-      if ('wakeLock' in navigator) {
-        wakeLock = await navigator.wakeLock.request('screen');
-      }
-    } catch(e) {}
+    try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch(e) {}
   }
   requestWakeLock();
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') requestWakeLock();
-  });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState==='visible') requestWakeLock(); });
 </script>
 </body>
 </html>
