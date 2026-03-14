@@ -4,6 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>GPS Stopař</title>
+
+<!-- PWA -->
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0a0e1a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GPS Stopař">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
@@ -117,6 +128,7 @@
   .btn-stop    { background: linear-gradient(135deg, var(--danger), #cc0000); color: #fff; }
   .btn-export  { background: linear-gradient(135deg, var(--accent), #0099bb); color: #000; }
   .btn-import  { background: linear-gradient(135deg, #a855f7, #7c3aed); color: #fff; }
+  .btn-github  { background: linear-gradient(135deg, #24292e, #444d56); color: #fff; border: 1px solid #555; }
   .btn-center  { background: var(--border); color: var(--accent); flex: 0 0 44px; font-size: 18px; padding: 11px 0; }
   .btn-live    { background: var(--border); color: var(--muted);  flex: 0 0 44px; font-size: 16px; padding: 11px 0; transition: all 0.2s; }
   .btn-live.on { background: rgba(0,229,255,0.15); color: var(--accent); border: 1px solid var(--accent); }
@@ -248,7 +260,8 @@
     <button class="btn btn-clear"  onclick="clearTrack()" title="Smazat">✕</button>
   </div>
   <div class="btn-row2">
-    <button class="btn btn-import" onclick="document.getElementById('gpxInput').click()">📂 Načíst GPX soubor</button>
+    <button class="btn btn-import" onclick="document.getElementById('gpxInput').click()">📂 Načíst GPX</button>
+    <button class="btn btn-github" id="btnGithub" onclick="showGithubModal()" disabled>☁ GitHub</button>
   </div>
 </div>
 
@@ -280,6 +293,50 @@
     </div>
 
     <button class="modal-btn" onclick="closePermModal()">Rozumím, zavřít</button>
+  </div>
+</div>
+
+<!-- GitHub nastavení modal -->
+<div class="modal-overlay hidden" id="githubModal">
+  <div class="modal">
+    <h2>☁ Nahrát na GitHub</h2>
+    <p class="modal-sub" id="ghModalSub">Nastav jednou, pak nahrávej jedním kliknutím.</p>
+
+    <div id="ghSettings">
+      <div style="margin-bottom:12px">
+        <div class="stat-label" style="margin-bottom:5px">GitHub token (repo scope)</div>
+        <input id="ghToken" type="password" placeholder="ghp_xxxxxxxxxxxx"
+          style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);
+                 background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;font-size:12px;">
+      </div>
+      <div style="margin-bottom:12px">
+        <div class="stat-label" style="margin-bottom:5px">Repozitář (uživatel/repo)</div>
+        <input id="ghRepo" type="text" placeholder="uzivatel/gps-stopar"
+          style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);
+                 background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;font-size:12px;">
+      </div>
+      <div style="margin-bottom:4px">
+        <div class="stat-label" style="margin-bottom:5px">Složka v repozitáři (nepovinné)</div>
+        <input id="ghFolder" type="text" placeholder="trasy"
+          style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);
+                 background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;font-size:12px;">
+      </div>
+      <p style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">
+        Token vytvoříš na <strong style="color:var(--text)">github.com → Settings → Developer settings → Personal access tokens → Tokens (classic)</strong> – zaškrtni jen <strong style="color:var(--text)">repo</strong>.
+      </p>
+    </div>
+
+    <div id="ghUploadInfo" style="display:none;text-align:center;padding:10px 0">
+      <div style="font-family:'Space Mono',monospace;font-size:13px;color:var(--green)" id="ghFileName"></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px" id="ghFileSize"></div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="modal-btn" style="background:var(--border);color:var(--text);flex:0.5"
+              onclick="closeGithubModal()">Zrušit</button>
+      <button class="modal-btn" id="ghUploadBtn" onclick="uploadToGithub()"
+              style="flex:1">Nahrát GPX</button>
+    </div>
   </div>
 </div>
 
@@ -443,6 +500,7 @@
 
       document.getElementById('statPoints').textContent = trackPoints.length;
       updateDistDisplay();
+      updateGithubBtn();
     }
 
     // Aktuální poloha
@@ -496,6 +554,7 @@
     document.getElementById('coordsBar').textContent    = 'Čeká na GPS signál…';
     document.getElementById('accuracyFill').style.width = '0%';
     document.getElementById('btnExport').disabled = true;
+    document.getElementById('btnGithub').disabled = true;
     document.getElementById('btnStart').disabled  = false;
     setStatus('idle', 'READY');
     showToast('Trasa smazána');
@@ -616,7 +675,121 @@
     document.body.removeChild(a); URL.revokeObjectURL(url);
   }
 
-  // Zabraň uspání displeje
+  // ── GITHUB UPLOAD ──────────────────────────────────────────────────────────
+  const GH_KEY_TOKEN  = 'gh_token';
+  const GH_KEY_REPO   = 'gh_repo';
+  const GH_KEY_FOLDER = 'gh_folder';
+
+  function buildGPXContent() {
+    const name = `GPS_Stopa_${formatDateForFile(new Date())}`;
+    let gpx = `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="GPS Stopař"
+     xmlns="http://www.topografix.com/GPX/1/1"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <n>${name}</n>
+    <time>${trackPoints[0].time.toISOString()}</time>
+  </metadata>
+  <trk>
+    <n>${name}</n>
+    <trkseg>\n`;
+    for (const pt of trackPoints) {
+      const altTag = pt.alt != null ? `\n        <ele>${pt.alt.toFixed(1)}</ele>` : '';
+      gpx += `      <trkpt lat="${pt.lat.toFixed(8)}" lon="${pt.lon.toFixed(8)}">${altTag}
+        <time>${pt.time.toISOString()}</time>
+      </trkpt>\n`;
+    }
+    gpx += `    </trkseg>\n  </trk>\n</gpx>`;
+    return { name, gpx };
+  }
+
+  function showGithubModal() {
+    if (trackPoints.length === 0) { showToast('Nejdřív zaznamenej trasu', true); return; }
+    // Načti uložené hodnoty
+    document.getElementById('ghToken').value  = localStorage.getItem(GH_KEY_TOKEN)  || '';
+    document.getElementById('ghRepo').value   = localStorage.getItem(GH_KEY_REPO)   || '';
+    document.getElementById('ghFolder').value = localStorage.getItem(GH_KEY_FOLDER) || 'trasy';
+    // Zobraz info o souboru
+    const { name, gpx } = buildGPXContent();
+    document.getElementById('ghFileName').textContent = name + '.gpx';
+    document.getElementById('ghFileSize').textContent = (new Blob([gpx]).size / 1024).toFixed(1) + ' KB · ' + trackPoints.length + ' bodů';
+    document.getElementById('ghUploadInfo').style.display = 'block';
+    document.getElementById('githubModal').classList.remove('hidden');
+  }
+
+  function closeGithubModal() {
+    document.getElementById('githubModal').classList.add('hidden');
+  }
+
+  async function uploadToGithub() {
+    const token  = document.getElementById('ghToken').value.trim();
+    const repo   = document.getElementById('ghRepo').value.trim();
+    const folder = document.getElementById('ghFolder').value.trim().replace(/^\/|\/$/g, '');
+
+    if (!token) { showToast('Zadej GitHub token', true); return; }
+    if (!repo || !repo.includes('/')) { showToast('Zadej repozitář ve formátu uživatel/repo', true); return; }
+
+    // Ulož nastavení
+    localStorage.setItem(GH_KEY_TOKEN,  token);
+    localStorage.setItem(GH_KEY_REPO,   repo);
+    localStorage.setItem(GH_KEY_FOLDER, folder);
+
+    const btn = document.getElementById('ghUploadBtn');
+    btn.textContent = 'Nahrávám…';
+    btn.disabled = true;
+
+    const { name, gpx } = buildGPXContent();
+    const filename = name + '.gpx';
+    const path = folder ? `${folder}/${filename}` : filename;
+    const content = btoa(unescape(encodeURIComponent(gpx))); // base64 UTF-8
+
+    try {
+      // Zkontroluj jestli soubor již existuje (pro správný SHA)
+      let sha = undefined;
+      const checkRes = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
+        headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+      });
+      if (checkRes.ok) {
+        const existing = await checkRes.json();
+        sha = existing.sha;
+      }
+
+      const body = { message: `Přidána trasa ${filename}`, content };
+      if (sha) body.sha = sha;
+
+      const res = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `token ${token}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (res.ok) {
+        closeGithubModal();
+        showToast(`✓ Nahráno: ${filename}`);
+      } else {
+        const err = await res.json();
+        const msg = err.message || res.status;
+        if (res.status === 401) showToast('Chybný token – zkontroluj ho', true);
+        else if (res.status === 404) showToast('Repozitář nenalezen – zkontroluj název', true);
+        else showToast('Chyba: ' + msg, true);
+      }
+    } catch (e) {
+      showToast('Chyba sítě – jsi online?', true);
+    } finally {
+      btn.textContent = 'Nahrát GPX';
+      btn.disabled = false;
+    }
+  }
+
+  // Zapni GitHub tlačítko jakmile jsou body
+  function updateGithubBtn() {
+    document.getElementById('btnGithub').disabled = trackPoints.length === 0;
+  }
   let wakeLock = null;
   async function requestWakeLock() {
     try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch(e) {}
@@ -627,6 +800,26 @@
   // Spustíme živé sledování hned při načtení
   document.getElementById('btnLive').classList.add('on');
   startLiveWatch();
+
+  // ── PWA: registrace service workeru ───────────────────────────────────────
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => {
+          console.log('SW registrován:', reg.scope);
+          // Oznám uživateli pokud je dostupná nová verze
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                showToast('Nová verze je k dispozici – obnov stránku');
+              }
+            });
+          });
+        })
+        .catch(err => console.warn('SW chyba:', err));
+    });
+  }
 </script>
 </body>
 </html>
