@@ -84,7 +84,7 @@
   }
 
   .stats-row {
-    display: grid; grid-template-columns: repeat(3, 1fr);
+    display: grid; grid-template-columns: repeat(4, 1fr);
     gap: 8px; margin-bottom: 12px;
   }
   .stat {
@@ -228,6 +228,10 @@
       <div class="stat-value" id="statDist">0.0 km</div>
     </div>
     <div class="stat">
+      <div class="stat-label">Rychlost</div>
+      <div class="stat-value" style="color:#a78bfa" id="statSpeed">— km/h</div>
+    </div>
+    <div class="stat">
       <div class="stat-label">Přesnost</div>
       <div class="stat-value orange" id="statAccuracy">—</div>
     </div>
@@ -347,7 +351,7 @@
   }
 
   function onPosition(pos) {
-    const { latitude: lat, longitude: lon, altitude: alt, accuracy } = pos.coords;
+    const { latitude: lat, longitude: lon, altitude: alt, accuracy, speed: gpsSpeed } = pos.coords;
     const time = new Date(pos.timestamp);
     lastKnownPos = [lat, lon];
 
@@ -360,6 +364,18 @@
     // Zaznamenej bod jen pokud se pohnulo >3 m
     const last = trackPoints[trackPoints.length - 1];
     const moved = last ? haversine(last.lat, last.lon, lat, lon) : 0;
+
+    // Rychlost: přednostně z GPS, záloha výpočtem
+    let speedKmh = null;
+    if (gpsSpeed != null && gpsSpeed >= 0) {
+      speedKmh = gpsSpeed * 3.6;
+    } else if (last && moved > 1) {
+      const dtSec = (time - last.time) / 1000;
+      if (dtSec > 0) speedKmh = (moved / dtSec) * 3.6;
+    }
+    if (speedKmh !== null) {
+      document.getElementById('statSpeed').textContent = speedKmh.toFixed(1) + ' km/h';
+    }
 
     if (!last || moved > 3) {
       if (last) totalDist += moved;
@@ -423,6 +439,7 @@
     if (importedPolyline) { map.removeLayer(importedPolyline); importedPolyline = null; }
     document.getElementById('statPoints').textContent   = '0';
     document.getElementById('statDist').textContent     = '0.0 km';
+    document.getElementById('statSpeed').textContent    = '— km/h';
     document.getElementById('statAccuracy').textContent = '—';
     document.getElementById('coordsBar').textContent    = 'Čeká na GPS signál…';
     document.getElementById('accuracyFill').style.width = '0%';
