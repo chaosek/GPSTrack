@@ -276,7 +276,7 @@
   <div class="btn-row2">
     <button class="btn btn-import" onclick="document.getElementById('gpxInput').click()">📂 Načíst GPX</button>
     <button class="btn btn-github" id="btnGithub" onclick="showGithubModal()" disabled>☁ GitHub</button>
-    <button class="btn btn-share"  id="btnShare"  onclick="shareTrack()" disabled>Sdílet rodině</button>
+    <button class="btn btn-share"  id="btnShare"  onclick="shareTrack()" disabled>Sdílet</button>
   </div>
 </div>
 
@@ -865,7 +865,7 @@
   startLiveWatch();
 
   // ── PWA: registrace service workeru + update handling ─────────────────────
-  const APP_VERSION = '202603150026'; // auto-generováno při sestavení
+  const APP_VERSION = '202603150032'; // auto-generováno při sestavení
   document.getElementById('versionTag').textContent = 'v' + APP_VERSION.slice(0,8);
 
   let pendingWorker = null;
