@@ -472,6 +472,14 @@
     if (gpsSpeed != null && gpsSpeed >= 0) {
       lastKnownSpeed = (gpsSpeed * 3.6).toFixed(1) + ' km/h';
     }
+
+    // Aktualizuj UI
+    document.getElementById('coordsBar').textContent = `${lat.toFixed(6)}, ${lon.toFixed(6)}  ±${Math.round(accuracy)}m`;
+    document.getElementById('statAccuracy').textContent = lastKnownAcc;
+    if (lastKnownSpeed !== '—') document.getElementById('statSpeed').textContent = lastKnownSpeed;
+    const accPct = Math.max(0, Math.min(100, 100 - (accuracy / 50 * 100)));
+    document.getElementById('accuracyFill').style.width = accPct + '%';
+
     if (currentMarker) currentMarker.setLatLng([lat, lon]);
     else currentMarker = L.marker([lat, lon], { icon: currentIcon }).addTo(map);
     if (autoFollow) map.panTo([lat, lon], { animate: true, duration: 0.5 });
@@ -892,7 +900,7 @@
   startLiveWatch();
 
   // ── PWA: registrace service workeru + update handling ─────────────────────
-  const APP_VERSION = '202603150137'; // auto-generováno při sestavení
+  const APP_VERSION = '202603150144'; // auto-generováno při sestavení
   document.getElementById('versionTag').textContent = 'v' + APP_VERSION.slice(0,8);
 
   let pendingWorker = null;
