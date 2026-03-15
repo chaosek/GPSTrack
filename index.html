@@ -454,15 +454,20 @@
   // ── ŽIVÉ SLEDOVÁNÍ (mimo nahrávání) ───────────────────────────────────────
   function startLiveWatch() {
     if (liveWatchId !== null || !navigator.geolocation) return;
-    liveWatchId = navigator.geolocation.watchPosition(onLivePosition, () => {}, {
+    liveWatchId = navigator.geolocation.watchPosition(onLivePosition, onLiveError, {
       enableHighAccuracy: true,
-      maximumAge: 3000,
-      timeout: 20000
+      maximumAge: 0,        // vždy čerstvá poloha, žádná cache
+      timeout: 30000
     });
   }
 
   function stopLiveWatch() {
     if (liveWatchId !== null) { navigator.geolocation.clearWatch(liveWatchId); liveWatchId = null; }
+    if (!isTracking) setStatus('idle', 'READY');
+  }
+
+  function onLiveError(err) {
+    if (err.code === 1) showPermModal();
   }
 
   function onLivePosition(pos) {
@@ -473,12 +478,15 @@
       lastKnownSpeed = (gpsSpeed * 3.6).toFixed(1) + ' km/h';
     }
 
-    // Aktualizuj UI
+    // Aktualizuj UI – přesnost, rychlost, souřadnice, indikátor
     document.getElementById('coordsBar').textContent = `${lat.toFixed(6)}, ${lon.toFixed(6)}  ±${Math.round(accuracy)}m`;
     document.getElementById('statAccuracy').textContent = lastKnownAcc;
     if (lastKnownSpeed !== '—') document.getElementById('statSpeed').textContent = lastKnownSpeed;
     const accPct = Math.max(0, Math.min(100, 100 - (accuracy / 50 * 100)));
     document.getElementById('accuracyFill').style.width = accPct + '%';
+
+    // Status badge – jen pokud se nenahrává
+    if (!isTracking) setStatus('active', 'LIVE');
 
     if (currentMarker) currentMarker.setLatLng([lat, lon]);
     else currentMarker = L.marker([lat, lon], { icon: currentIcon }).addTo(map);
@@ -900,7 +908,7 @@
   startLiveWatch();
 
   // ── PWA: registrace service workeru + update handling ─────────────────────
-  const APP_VERSION = '202603150144'; // auto-generováno při sestavení
+  const APP_VERSION = '202603150200'; // auto-generováno při sestavení
   document.getElementById('versionTag').textContent = 'v' + APP_VERSION.slice(0,8);
 
   let pendingWorker = null;
