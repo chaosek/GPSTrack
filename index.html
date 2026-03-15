@@ -237,7 +237,7 @@
 <!-- Update banner -->
 <div id="updateBanner" style="display:none;position:fixed;top:54px;left:0;right:0;z-index:2000;
      background:linear-gradient(135deg,#059669,#047857);padding:10px 16px;
-     display:none;align-items:center;justify-content:space-between;gap:10px">
+     align-items:center;justify-content:space-between;gap:10px">
   <span style="font-family:'Space Mono',monospace;font-size:11px;color:#fff">
     🆕 Nová verze k dispozici!
   </span>
@@ -883,7 +883,7 @@
   startLiveWatch();
 
   // ── PWA: registrace service workeru + update handling ─────────────────────
-  const APP_VERSION = '202603150128'; // auto-generováno při sestavení
+  const APP_VERSION = '202603150133'; // auto-generováno při sestavení
   document.getElementById('versionTag').textContent = 'v' + APP_VERSION.slice(0,8);
 
   let pendingWorker = null;
