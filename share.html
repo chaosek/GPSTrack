@@ -121,7 +121,7 @@
     // Marker
     L.circleMarker([lat, lon], {
       radius: 10, fillColor: '#00e5ff', color: 'white', weight: 3, fillOpacity: 1
-    }).addTo(map).bindPopup(`📍 ${cas} – ${spd}`).openPopup();
+    }).addTo(map).bindPopup(`<b>📍 ${dat}</b><br>${cas}<br>${spd}`).openPopup();
 
     // Kruh přesnosti
     const meters = parseFloat(acc);

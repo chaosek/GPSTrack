@@ -393,7 +393,9 @@
   let currentMarker = null;
   let startMarker   = null;
   let firstFix = true;
-  let lastKnownPos = null;
+  let lastKnownPos   = null;
+  let lastKnownSpeed = '—';
+  let lastKnownAcc   = '—';
   let autoFollow = true;
 
   // Stop auto-follow when user manually pans
@@ -460,11 +462,16 @@
   }
 
   function onLivePosition(pos) {
-    const { latitude: lat, longitude: lon } = pos.coords;
+    const { latitude: lat, longitude: lon, accuracy, speed: gpsSpeed } = pos.coords;
     lastKnownPos = [lat, lon];
+    lastKnownAcc = accuracy ? Math.round(accuracy) + ' m' : '—';
+    if (gpsSpeed != null && gpsSpeed >= 0) {
+      lastKnownSpeed = (gpsSpeed * 3.6).toFixed(1) + ' km/h';
+    }
     if (currentMarker) currentMarker.setLatLng([lat, lon]);
     else currentMarker = L.marker([lat, lon], { icon: currentIcon }).addTo(map);
     if (autoFollow) map.panTo([lat, lon], { animate: true, duration: 0.5 });
+    updateShareBtn();
   }
 
   function toggleLiveFollow() {
@@ -819,18 +826,20 @@
   function shareTrack() {
     if (!lastKnownPos) { showToast('Nejdřív získej GPS polohu', true); return; }
 
-    const now   = new Date();
-    const speedTxt = document.getElementById('statSpeed').textContent;
-    const accTxt   = document.getElementById('statAccuracy').textContent;
+    const now = new Date();
+    // Vezmi rychlost a přesnost – přednostně z live proměnných, záloha z UI
+    const spd = lastKnownSpeed !== '—' ? lastKnownSpeed : document.getElementById('statSpeed').textContent;
+    const acc = lastKnownAcc   !== '—' ? lastKnownAcc   : document.getElementById('statAccuracy').textContent;
+    const cas = now.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const dat = now.toLocaleDateString('cs-CZ');
 
-    // Parametry přímo v URL – krátké a čitelné
     const params = new URLSearchParams({
-      lat:  lastKnownPos[0].toFixed(6),
-      lon:  lastKnownPos[1].toFixed(6),
-      cas:  now.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }),
-      dat:  now.toLocaleDateString('cs-CZ'),
-      spd:  speedTxt,
-      acc:  accTxt
+      lat: lastKnownPos[0].toFixed(6),
+      lon: lastKnownPos[1].toFixed(6),
+      cas,
+      dat,
+      spd,
+      acc
     });
 
     const baseUrl = window.location.href.split('?')[0].split('#')[0].replace(/index\.html$/, '');
@@ -839,7 +848,7 @@
     if (navigator.share) {
       navigator.share({
         title: 'Jsem tady!',
-        text: `📍 Moje poloha – ${now.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}, ${speedTxt}`,
+        text: `📍 ${dat} v ${cas} – ${spd}`,
         url
       }).catch(() => fallbackCopy(url));
     } else {
@@ -874,7 +883,7 @@
   startLiveWatch();
 
   // ── PWA: registrace service workeru + update handling ─────────────────────
-  const APP_VERSION = '202603150115'; // auto-generováno při sestavení
+  const APP_VERSION = '202603150128'; // auto-generováno při sestavení
   document.getElementById('versionTag').textContent = 'v' + APP_VERSION.slice(0,8);
 
   let pendingWorker = null;
