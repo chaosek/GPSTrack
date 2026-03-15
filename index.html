@@ -219,13 +219,26 @@
 <header>
   <div class="logo">
     <div class="logo-icon">🛰</div>
-    <div class="logo-text">GPS <span>Stopař</span></div>
+    <div class="logo-text">GPS <span>Stopař</span> <span style="font-size:10px;color:var(--muted);font-weight:400" id="versionTag">v1.0</span></div>
   </div>
   <div class="status-badge" id="statusBadge">
     <div class="status-dot"></div>
     <span id="statusText">READY</span>
   </div>
 </header>
+
+<!-- Update banner -->
+<div id="updateBanner" style="display:none;position:fixed;top:54px;left:0;right:0;z-index:2000;
+     background:linear-gradient(135deg,#059669,#047857);padding:10px 16px;
+     display:none;align-items:center;justify-content:space-between;gap:10px">
+  <span style="font-family:'Space Mono',monospace;font-size:11px;color:#fff">
+    🆕 Nová verze k dispozici!
+  </span>
+  <button onclick="doUpdate()" style="background:#fff;color:#059669;border:none;border-radius:8px;
+          padding:6px 14px;font-family:'Syne',sans-serif;font-weight:800;font-size:12px;cursor:pointer">
+    Aktualizovat
+  </button>
+</div>
 
 <div id="map"></div>
 
@@ -851,23 +864,44 @@
   document.getElementById('btnLive').classList.add('on');
   startLiveWatch();
 
-  // ── PWA: registrace service workeru ───────────────────────────────────────
+  // ── PWA: registrace service workeru + update handling ─────────────────────
+  const APP_VERSION = '202603150007'; // auto-generováno při sestavení
+  document.getElementById('versionTag').textContent = 'v' + APP_VERSION.slice(0,8);
+
+  let pendingWorker = null;
+
+  function doUpdate() {
+    if (pendingWorker) {
+      pendingWorker.postMessage({ type: 'SKIP_WAITING' });
+    } else {
+      window.location.reload();
+    }
+  }
+
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
-        .then(reg => {
-          console.log('SW registrován:', reg.scope);
-          // Oznám uživateli pokud je dostupná nová verze
-          reg.addEventListener('updatefound', () => {
-            const newWorker = reg.installing;
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                showToast('Nová verze je k dispozici – obnov stránku');
-              }
-            });
+      navigator.serviceWorker.register('./sw.js').then(reg => {
+
+        // Zkontroluj update hned při startu
+        reg.update();
+
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // Je nainstalovaná nová verze – zobraz banner
+              pendingWorker = newWorker;
+              document.getElementById('updateBanner').style.display = 'flex';
+            }
           });
-        })
-        .catch(err => console.warn('SW chyba:', err));
+        });
+      }).catch(err => console.warn('SW chyba:', err));
+
+      // Reload stránky jakmile nový SW převezme kontrolu
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) { refreshing = true; window.location.reload(); }
+      });
     });
   }
 </script>
