@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GPS Trasa</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap');
+  :root {
+    --bg: #0a0e1a; --panel: #111827; --border: #1e2d45;
+    --accent: #00e5ff; --accent2: #ff6b35; --green: #00ff9d;
+    --text: #e2e8f0; --muted: #4a5568;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Syne',sans-serif; background:var(--bg); color:var(--text); height:100dvh; display:flex; flex-direction:column; }
+
+  header {
+    padding: 12px 16px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .logo { display:flex; align-items:center; gap:10px; }
+  .logo-icon {
+    width:32px; height:32px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px;
+  }
+  .logo-text { font-size:17px; font-weight:800; }
+  .logo-text span { color:var(--accent); }
+  .badge {
+    padding:5px 12px; border-radius:20px;
+    font-family:'Space Mono',monospace; font-size:11px; font-weight:700;
+    background:rgba(0,229,255,0.1); border:1px solid var(--accent); color:var(--accent);
+  }
+
+  #map { flex:1; width:100%; }
+
+  .info-bar {
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    padding: 12px 16px;
+    flex-shrink: 0;
+  }
+  .stats {
+    display: grid; grid-template-columns: repeat(3,1fr); gap:8px; margin-bottom:10px;
+  }
+  .stat {
+    background:var(--bg); border:1px solid var(--border);
+    border-radius:10px; padding:8px; text-align:center;
+  }
+  .stat-label { font-family:'Space Mono',monospace; font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; }
+  .stat-value { font-family:'Space Mono',monospace; font-size:15px; font-weight:700; color:var(--accent); margin-top:2px; }
+  .stat-value.green { color:var(--green); }
+  .stat-value.orange { color:var(--accent2); }
+
+  .note {
+    font-size:11px; color:var(--muted); text-align:center;
+    font-family:'Space Mono',monospace;
+  }
+  .note a { color:var(--accent); text-decoration:none; }
+
+  .error {
+    flex:1; display:flex; align-items:center; justify-content:center;
+    flex-direction:column; gap:12px; padding:32px; text-align:center;
+  }
+  .error h2 { font-size:20px; color:var(--accent); }
+  .error p { color:var(--muted); font-size:14px; }
+
+  .leaflet-container { background:#1a2035; }
+  .leaflet-control-zoom { border:1px solid var(--border) !important; }
+  .leaflet-control-zoom a { background:var(--panel) !important; color:var(--text) !important; border-color:var(--border) !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🛰</div>
+    <div class="logo-text">GPS <span>Trasa</span></div>
+  </div>
+  <div class="badge" id="dateBadge">—</div>
+</header>
+
+<div id="map"></div>
+<div id="errorDiv" class="error" style="display:none">
+  <h2>😕 Trasa nenalezena</h2>
+  <p>Odkaz je neplatný nebo poškozený.<br>Požádej o nový odkaz.</p>
+</div>
+
+<div class="info-bar" id="infoBar">
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">Body trasy</div>
+      <div class="stat-value green" id="statPoints">—</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Vzdálenost</div>
+      <div class="stat-value" id="statDist">—</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Délka záznamu</div>
+      <div class="stat-value orange" id="statTime">—</div>
+    </div>
+  </div>
+  <div class="note">Sdíleno přes <a href="./index.html">GPS Stopař</a></div>
+</div>
+
+<script>
+  const hash = window.location.hash.slice(1);
+
+  if (!hash) {
+    showError();
+  } else {
+    try {
+      const json    = decodeURIComponent(escape(atob(hash)));
+      const payload = JSON.parse(json);
+      const pts     = payload.p;
+
+      if (!pts || pts.length < 2) throw new Error('Málo bodů');
+
+      // Mapa
+      const map = L.map('map', { zoomControl:true, attributionControl:false });
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(map);
+
+      const latlngs = pts.map(p => [p[0], p[1]]);
+
+      // Trasa
+      const poly = L.polyline(latlngs, { color:'#00e5ff', weight:4, opacity:0.9, smoothFactor:1.5 }).addTo(map);
+
+      // Start marker (zelený)
+      L.circleMarker(latlngs[0], {
+        radius:8, fillColor:'#00ff9d', color:'white', weight:3, fillOpacity:1
+      }).addTo(map).bindPopup('🟢 Start');
+
+      // Cíl marker (červený)
+      L.circleMarker(latlngs[latlngs.length-1], {
+        radius:8, fillColor:'#ff4444', color:'white', weight:3, fillOpacity:1
+      }).addTo(map).bindPopup('🔴 Cíl');
+
+      map.fitBounds(poly.getBounds(), { padding:[24,24] });
+
+      // Datum
+      document.getElementById('dateBadge').textContent = (payload.t || '').replace('_',' ');
+
+      // Statistiky
+      document.getElementById('statPoints').textContent = pts.length;
+      const km = payload.d / 1000;
+      document.getElementById('statDist').textContent = km < 1 ? payload.d + ' m' : km.toFixed(2) + ' km';
+
+      // Délka záznamu – odhadneme z počtu bodů (přibližně)
+      document.getElementById('statTime').textContent = '—';
+
+    } catch(e) {
+      showError();
+    }
+  }
+
+  function showError() {
+    document.getElementById('map').style.display    = 'none';
+    document.getElementById('infoBar').style.display = 'none';
+    document.getElementById('errorDiv').style.display = 'flex';
+  }
+</script>
+</body>
+</html>

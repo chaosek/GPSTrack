@@ -129,6 +129,7 @@
   .btn-export  { background: linear-gradient(135deg, var(--accent), #0099bb); color: #000; }
   .btn-import  { background: linear-gradient(135deg, #a855f7, #7c3aed); color: #fff; }
   .btn-github  { background: linear-gradient(135deg, #24292e, #444d56); color: #fff; border: 1px solid #555; }
+  .btn-share   { background: linear-gradient(135deg, #059669, #047857); color: #fff; }
   .btn-center  { background: var(--border); color: var(--accent); flex: 0 0 44px; font-size: 18px; padding: 11px 0; }
   .btn-live    { background: var(--border); color: var(--muted);  flex: 0 0 44px; font-size: 16px; padding: 11px 0; transition: all 0.2s; }
   .btn-live.on { background: rgba(0,229,255,0.15); color: var(--accent); border: 1px solid var(--accent); }
@@ -262,6 +263,7 @@
   <div class="btn-row2">
     <button class="btn btn-import" onclick="document.getElementById('gpxInput').click()">📂 Načíst GPX</button>
     <button class="btn btn-github" id="btnGithub" onclick="showGithubModal()" disabled>☁ GitHub</button>
+    <button class="btn btn-share"  id="btnShare"  onclick="shareTrack()" disabled>🔗 Sdílet</button>
   </div>
 </div>
 
@@ -501,6 +503,7 @@
       document.getElementById('statPoints').textContent = trackPoints.length;
       updateDistDisplay();
       updateGithubBtn();
+      updateShareBtn();
     }
 
     // Aktuální poloha
@@ -555,6 +558,7 @@
     document.getElementById('accuracyFill').style.width = '0%';
     document.getElementById('btnExport').disabled = true;
     document.getElementById('btnGithub').disabled = true;
+    document.getElementById('btnShare').disabled  = true;
     document.getElementById('btnStart').disabled  = false;
     setStatus('idle', 'READY');
     showToast('Trasa smazána');
@@ -790,6 +794,52 @@
   function updateGithubBtn() {
     document.getElementById('btnGithub').disabled = trackPoints.length === 0;
   }
+
+  // ── SDÍLENÍ TRASY ──────────────────────────────────────────────────────────
+  function shareTrack() {
+    if (trackPoints.length === 0) { showToast('Nejdřív zaznamenej trasu', true); return; }
+
+    // Komprimuj body – ulož jen lat/lon zaokrouhlené na 5 des. míst (~1m přesnost)
+    const pts = trackPoints.map(p => [
+      Math.round(p.lat * 1e5) / 1e5,
+      Math.round(p.lon * 1e5) / 1e5
+    ]);
+
+    const payload = {
+      t: formatDateForFile(trackPoints[0].time),
+      d: Math.round(totalDist),
+      p: pts
+    };
+
+    const b64     = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+    const baseUrl = window.location.href.split('?')[0].split('#')[0].replace(/index\.html$/, '');
+    const url     = `${baseUrl}share.html#${b64}`;
+
+    if (navigator.share) {
+      navigator.share({
+        title: 'GPS trasa – ' + payload.t,
+        text: `Moje trasa: ${(totalDist/1000).toFixed(2)} km, ${trackPoints.length} bodů`,
+        url
+      }).catch(() => fallbackCopy(url));
+    } else {
+      fallbackCopy(url);
+    }
+  }
+
+  function fallbackCopy(text) {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text)
+        .then(() => showToast('Odkaz zkopírován – pošli ho rodině!'))
+        .catch(() => showToast('Odkaz: ' + text));
+    } else {
+      showToast('Odkaz zkopírován!');
+    }
+  }
+
+  function updateShareBtn() {
+    document.getElementById('btnShare').disabled = trackPoints.length === 0;
+  }
+
   let wakeLock = null;
   async function requestWakeLock() {
     try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch(e) {}
