@@ -625,7 +625,7 @@
 
         if (importedPolyline) map.removeLayer(importedPolyline);
         importedPolyline = L.polyline(latlngs, {
-          color: '#ff6b35', weight: 3, opacity: 0.85,
+          color: '#00e5ff', weight: 3, opacity: 0.85,
           dashArray: '8, 5', smoothFactor: 1.5
         }).addTo(map);
 
@@ -867,7 +867,7 @@
   startLiveWatch();
 
   // ── PWA: registrace service workeru + update handling ─────────────────────
-  const APP_VERSION = '202603150058'; // auto-generováno při sestavení
+  const APP_VERSION = '202603150105'; // auto-generováno při sestavení
   document.getElementById('versionTag').textContent = 'v' + APP_VERSION.slice(0,8);
 
   let pendingWorker = null;
