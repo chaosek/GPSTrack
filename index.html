@@ -221,9 +221,16 @@
     <div class="logo-icon">🛰</div>
     <div class="logo-text">GPS <span>Stopař</span> <span style="font-size:10px;color:var(--muted);font-weight:400" id="versionTag">v1.0</span></div>
   </div>
-  <div class="status-badge" id="statusBadge">
-    <div class="status-dot"></div>
-    <span id="statusText">READY</span>
+  <div style="display:flex;align-items:center;gap:8px">
+    <button onclick="forceUpdate()" title="Vynutit aktualizaci"
+      style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;
+             padding:4px 8px;font-size:10px;font-family:'Space Mono',monospace;cursor:pointer">
+      ↺ Cache
+    </button>
+    <div class="status-badge" id="statusBadge">
+      <div class="status-dot"></div>
+      <span id="statusText">READY</span>
+    </div>
   </div>
 </header>
 
@@ -867,7 +874,7 @@
   startLiveWatch();
 
   // ── PWA: registrace service workeru + update handling ─────────────────────
-  const APP_VERSION = '202603150105'; // auto-generováno při sestavení
+  const APP_VERSION = '202603150115'; // auto-generováno při sestavení
   document.getElementById('versionTag').textContent = 'v' + APP_VERSION.slice(0,8);
 
   let pendingWorker = null;
@@ -877,6 +884,23 @@
       pendingWorker.postMessage({ type: 'SKIP_WAITING' });
     } else {
       window.location.reload();
+    }
+  }
+
+  async function forceUpdate() {
+    try {
+      // Smaž všechny cache
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+      // Odregistruj service worker
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.unregister()));
+      }
+      showToast('Cache smazána, načítám znovu…');
+      setTimeout(() => window.location.reload(true), 800);
+    } catch(e) {
+      window.location.reload(true);
     }
   }
 

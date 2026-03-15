@@ -1,6 +1,6 @@
 // GPS Stopař – Service Worker
 // Verzi změň kdykoli chceš vynutit refresh cache
-const CACHE_VERSION = 'gps-stopar-202603150105';
+const CACHE_VERSION = 'gps-stopar-202603150115';
 
 const APP_SHELL = [
   './index.html',
