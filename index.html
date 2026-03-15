@@ -808,30 +808,31 @@
     document.getElementById('btnGithub').disabled = trackPoints.length === 0;
   }
 
-  // ── SDÍLENÍ TRASY ──────────────────────────────────────────────────────────
+  // ── SDÍLENÍ AKTUÁLNÍ POLOHY ────────────────────────────────────────────────
   function shareTrack() {
-    if (trackPoints.length === 0) { showToast('Nejdřív zaznamenej trasu', true); return; }
+    if (!lastKnownPos) { showToast('Nejdřív získej GPS polohu', true); return; }
 
-    // Komprimuj body – ulož jen lat/lon zaokrouhlené na 5 des. míst (~1m přesnost)
-    const pts = trackPoints.map(p => [
-      Math.round(p.lat * 1e5) / 1e5,
-      Math.round(p.lon * 1e5) / 1e5
-    ]);
+    const now   = new Date();
+    const speedTxt = document.getElementById('statSpeed').textContent;
+    const accTxt   = document.getElementById('statAccuracy').textContent;
 
-    const payload = {
-      t: formatDateForFile(trackPoints[0].time),
-      d: Math.round(totalDist),
-      p: pts
-    };
+    // Parametry přímo v URL – krátké a čitelné
+    const params = new URLSearchParams({
+      lat:  lastKnownPos[0].toFixed(6),
+      lon:  lastKnownPos[1].toFixed(6),
+      cas:  now.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }),
+      dat:  now.toLocaleDateString('cs-CZ'),
+      spd:  speedTxt,
+      acc:  accTxt
+    });
 
-    const b64     = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
     const baseUrl = window.location.href.split('?')[0].split('#')[0].replace(/index\.html$/, '');
-    const url     = `${baseUrl}share.html#${b64}`;
+    const url = `${baseUrl}share.html?${params.toString()}`;
 
     if (navigator.share) {
       navigator.share({
-        title: 'GPS trasa – ' + payload.t,
-        text: `Moje trasa: ${(totalDist/1000).toFixed(2)} km, ${trackPoints.length} bodů`,
+        title: 'Jsem tady!',
+        text: `📍 Moje poloha – ${now.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}, ${speedTxt}`,
         url
       }).catch(() => fallbackCopy(url));
     } else {
@@ -842,7 +843,7 @@
   function fallbackCopy(text) {
     if (navigator.clipboard) {
       navigator.clipboard.writeText(text)
-        .then(() => showToast('Odkaz zkopírován – pošli ho rodině!'))
+        .then(() => showToast('Odkaz zkopírován!'))
         .catch(() => showToast('Odkaz: ' + text));
     } else {
       showToast('Odkaz zkopírován!');
@@ -850,7 +851,8 @@
   }
 
   function updateShareBtn() {
-    document.getElementById('btnShare').disabled = trackPoints.length === 0;
+    // Stačí mít GPS polohu – nevyžadujeme zaznamenanou trasu
+    document.getElementById('btnShare').disabled = !lastKnownPos;
   }
 
   let wakeLock = null;
@@ -865,7 +867,7 @@
   startLiveWatch();
 
   // ── PWA: registrace service workeru + update handling ─────────────────────
-  const APP_VERSION = '202603150032'; // auto-generováno při sestavení
+  const APP_VERSION = '202603150058'; // auto-generováno při sestavení
   document.getElementById('versionTag').textContent = 'v' + APP_VERSION.slice(0,8);
 
   let pendingWorker = null;
