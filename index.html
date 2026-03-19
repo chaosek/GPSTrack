@@ -601,7 +601,8 @@
     if (polyline)       { map.removeLayer(polyline); polyline = null; }
     if (currentMarker)  { map.removeLayer(currentMarker); currentMarker = null; }
     if (startMarker)    { map.removeLayer(startMarker); startMarker = null; }
-    if (importedPolyline) { map.removeLayer(importedPolyline); importedPolyline = null; }
+    clearImportedLayers();
+    if (speedLegendControl) { map.removeControl(speedLegendControl); speedLegendControl = null; }
     document.getElementById('statPoints').textContent   = '0';
     document.getElementById('statDist').textContent     = '0.0 km';
     document.getElementById('statSpeed').textContent    = '— km/h';
@@ -644,6 +645,34 @@
   }
 
   // ── GPX IMPORT ─────────────────────────────────────────────────────────────
+  let importedSpeedLayers = []; // segmenty + markery
+
+  function speedColor(ratio) {
+    // 0=modrá(stojí), 0.5=zelená(střední), 1=červená(max)
+    const stops = [
+      [0,    [0,   150, 255]],
+      [0.25, [0,   230, 120]],
+      [0.55, [255, 230,   0]],
+      [0.8,  [255, 120,   0]],
+      [1,    [255,  40,  40]],
+    ];
+    let lo = stops[0], hi = stops[stops.length-1];
+    for (let i = 0; i < stops.length-1; i++) {
+      if (ratio >= stops[i][0] && ratio <= stops[i+1][0]) { lo = stops[i]; hi = stops[i+1]; break; }
+    }
+    const t = lo[0] === hi[0] ? 0 : (ratio - lo[0]) / (hi[0] - lo[0]);
+    const r = Math.round(lo[1][0] + t*(hi[1][0]-lo[1][0]));
+    const g = Math.round(lo[1][1] + t*(hi[1][1]-lo[1][1]));
+    const b = Math.round(lo[1][2] + t*(hi[1][2]-lo[1][2]));
+    return `rgb(${r},${g},${b})`;
+  }
+
+  function clearImportedLayers() {
+    if (importedPolyline) { map.removeLayer(importedPolyline); importedPolyline = null; }
+    importedSpeedLayers.forEach(l => map.removeLayer(l));
+    importedSpeedLayers = [];
+  }
+
   function importGPX(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -655,35 +684,170 @@
         const trkpts = xml.querySelectorAll('trkpt');
         if (trkpts.length === 0) { showToast('GPX neobsahuje žádné body', true); return; }
 
-        const latlngs = [];
+        // Parsuj body s časem
+        const pts = [];
         trkpts.forEach(pt => {
           const lat = parseFloat(pt.getAttribute('lat'));
           const lon = parseFloat(pt.getAttribute('lon'));
-          if (!isNaN(lat) && !isNaN(lon)) latlngs.push([lat, lon]);
+          const timeEl = pt.querySelector('time');
+          const time = timeEl ? new Date(timeEl.textContent.trim()) : null;
+          if (!isNaN(lat) && !isNaN(lon)) pts.push({ lat, lon, time });
         });
 
-        if (importedPolyline) map.removeLayer(importedPolyline);
-        importedPolyline = L.polyline(latlngs, {
-          color: '#00e5ff', weight: 3, opacity: 0.85,
-          dashArray: '8, 5', smoothFactor: 1.5
-        }).addTo(map);
+        // Spočítej rychlost pro každý bod (km/h)
+        // Bod 0: rychlost = rychlost bodu 1; poslední: kopie předchozího
+        for (let i = 0; i < pts.length; i++) {
+          const prev = pts[i-1], next = pts[i+1];
+          const hasTime = pts[i].time;
+          if (next) {
+            const dist = haversine(pts[i].lat, pts[i].lon, next.lat, next.lon);
+            if (hasTime && next.time && next.time > pts[i].time) {
+              const dt = (next.time - pts[i].time) / 1000;
+              pts[i].speed = (dist / dt) * 3.6;
+            } else {
+              pts[i].speed = null; // bez času → neznámá rychlost
+            }
+          } else {
+            pts[i].speed = pts[i-1]?.speed ?? null;
+          }
+        }
+        if (pts.length > 1 && pts[0].speed === null) pts[0].speed = pts[1].speed;
 
-        map.fitBounds(importedPolyline.getBounds(), { padding: [20, 20] });
+        // Min/max rychlost (ignoruj null)
+        const speeds = pts.map(p => p.speed).filter(s => s !== null);
+        const hasSpeedData = speeds.length > 1;
+        const maxSpeed = hasSpeedData ? Math.max(...speeds) : 0;
+        const minSpeed = hasSpeedData ? Math.min(...speeds) : 0;
+        const range = maxSpeed - minSpeed || 1;
 
-        // Délka importované trasy
+        // Zastav tracking i živé sledování při načtení GPX
+        stopTracking();
+        stopLiveWatch();
+        liveFollow = false;
+        document.getElementById('btnLive').classList.remove('on');
+        if (currentMarker) { map.removeLayer(currentMarker); currentMarker = null; }
+
+        clearImportedLayers();
+
+        if (hasSpeedData) {
+          // Vykreslení trasy jako barevné segmenty
+          for (let i = 0; i < pts.length - 1; i++) {
+            const spd = pts[i].speed ?? minSpeed;
+            const ratio = (spd - minSpeed) / range;
+            const color = speedColor(ratio);
+            const seg = L.polyline(
+              [[pts[i].lat, pts[i].lon], [pts[i+1].lat, pts[i+1].lon]],
+              { color, weight: 5, opacity: 0.95, lineCap: 'round', lineJoin: 'round' }
+            ).addTo(map);
+            importedSpeedLayers.push(seg);
+          }
+
+          // Top 5 rychlostních bodů – markery s popupem
+          const sorted = [...pts]
+            .filter(p => p.speed !== null)
+            .sort((a, b) => b.speed - a.speed);
+
+          // Deduplikuj – vynech body příliš blízko sobě (< 50 m)
+          const topPts = [];
+          for (const pt of sorted) {
+            if (topPts.length >= 5) break;
+            const tooClose = topPts.some(t => haversine(t.lat, t.lon, pt.lat, pt.lon) < 50);
+            if (!tooClose) topPts.push(pt);
+          }
+
+          topPts.forEach((pt, idx) => {
+            const ratio = (pt.speed - minSpeed) / range;
+            const color = speedColor(ratio);
+            const timeStr = pt.time
+              ? pt.time.toLocaleString('cs-CZ', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' })
+              : '—';
+
+            const icon = L.divIcon({
+              className: '',
+              html: `<div style="
+                width:22px;height:22px;border-radius:50%;
+                background:${color};border:3px solid #fff;
+                box-shadow:0 0 0 2px ${color},0 0 10px ${color}88;
+                display:flex;align-items:center;justify-content:center;
+                font-family:'Space Mono',monospace;font-size:9px;font-weight:700;color:#000;
+              ">${idx+1}</div>`,
+              iconSize: [22, 22], iconAnchor: [11, 11]
+            });
+
+            const marker = L.marker([pt.lat, pt.lon], { icon }).addTo(map);
+            marker.bindPopup(`
+              <div style="font-family:'Space Mono',monospace;font-size:12px;line-height:1.8;min-width:160px;">
+                <div style="font-size:15px;font-weight:700;color:${color};">⚡ ${pt.speed.toFixed(1)} km/h</div>
+                <div style="color:#aaa;font-size:10px;">#${idx+1} nejvyšší rychlost</div>
+                <hr style="border-color:#333;margin:5px 0;">
+                <div>📅 ${timeStr}</div>
+                <div style="color:#777;font-size:10px;">${pt.lat.toFixed(6)}, ${pt.lon.toFixed(6)}</div>
+              </div>
+            `, { maxWidth: 220 });
+
+            // První (max rychlost) otevři popup automaticky
+            if (idx === 0) setTimeout(() => marker.openPopup(), 600);
+            importedSpeedLayers.push(marker);
+          });
+
+          // Legenda – barevný gradient
+          addSpeedLegend(minSpeed, maxSpeed);
+
+        } else {
+          // Fallback – bez časových dat, prostá čárkovaná linie
+          importedPolyline = L.polyline(pts.map(p => [p.lat, p.lon]), {
+            color: '#00e5ff', weight: 3, opacity: 0.85, dashArray: '8, 5'
+          }).addTo(map);
+        }
+
+        // Fit bounds
+        const allLatLng = pts.map(p => [p.lat, p.lon]);
+        map.fitBounds(L.latLngBounds(allLatLng), { padding: [20, 20] });
+
+        // Délka
         let dist = 0;
-        for (let i = 1; i < latlngs.length; i++) dist += haversine(latlngs[i-1][0], latlngs[i-1][1], latlngs[i][0], latlngs[i][1]);
+        for (let i = 1; i < pts.length; i++) dist += haversine(pts[i-1].lat, pts[i-1].lon, pts[i].lat, pts[i].lon);
         const km = (dist/1000).toFixed(2);
-        showToast(`Načteno ${latlngs.length} bodů, ${km} km`);
+        const maxStr = hasSpeedData ? `, max ${maxSpeed.toFixed(1)} km/h` : '';
+        showToast(`Načteno ${pts.length} bodů, ${km} km${maxStr}`);
 
-        const name = xml.querySelector('trk > name');
+        const name = xml.querySelector('trk > name, trk > n');
         if (name) setStatus('idle', name.textContent.substring(0,12).toUpperCase());
       } catch(err) {
+        console.error(err);
         showToast('Chyba při čtení GPX souboru', true);
       }
     };
     reader.readAsText(file);
-    event.target.value = ''; // reset pro opakované načtení
+    event.target.value = '';
+  }
+
+  // ── SPEED LEGEND ───────────────────────────────────────────────────────────
+  let speedLegendControl = null;
+  function addSpeedLegend(minSpd, maxSpd) {
+    if (speedLegendControl) { map.removeControl(speedLegendControl); speedLegendControl = null; }
+    speedLegendControl = L.control({ position: 'topright' });
+    speedLegendControl.onAdd = () => {
+      const div = L.DomUtil.create('div');
+      div.innerHTML = `
+        <div style="
+          background:rgba(17,24,39,0.92);border:1px solid #1e2d45;border-radius:10px;
+          padding:8px 12px;font-family:'Space Mono',monospace;font-size:10px;color:#e2e8f0;
+          min-width:130px;
+        ">
+          <div style="font-weight:700;margin-bottom:6px;color:#00e5ff;">⚡ Rychlost</div>
+          <div style="
+            height:8px;border-radius:4px;margin-bottom:4px;
+            background:linear-gradient(90deg,rgb(0,150,255),rgb(0,230,120),rgb(255,230,0),rgb(255,120,0),rgb(255,40,40));
+          "></div>
+          <div style="display:flex;justify-content:space-between;color:#4a5568;">
+            <span>${minSpd.toFixed(0)} km/h</span>
+            <span>${maxSpd.toFixed(0)} km/h</span>
+          </div>
+        </div>`;
+      return div;
+    };
+    speedLegendControl.addTo(map);
   }
 
   // ── HELPERS ────────────────────────────────────────────────────────────────
