@@ -691,24 +691,31 @@
           const lon = parseFloat(pt.getAttribute('lon'));
           const timeEl = pt.querySelector('time');
           const time = timeEl ? new Date(timeEl.textContent.trim()) : null;
-          if (!isNaN(lat) && !isNaN(lon)) pts.push({ lat, lon, time });
+          const speedEl = pt.querySelector('speed');
+          const gpxSpeed = speedEl ? parseFloat(speedEl.textContent.trim()) : null; // m/s
+          if (!isNaN(lat) && !isNaN(lon)) pts.push({ lat, lon, time, gpxSpeed });
         });
 
-        // Spočítej rychlost pro každý bod (km/h)
-        // Bod 0: rychlost = rychlost bodu 1; poslední: kopie předchozího
+        // Rychlost: preferuj <speed> z GPX (m/s → km/h), fallback výpočet z času+vzdálenosti
+        const hasGpxSpeed = pts.some(p => p.gpxSpeed !== null && !isNaN(p.gpxSpeed));
         for (let i = 0; i < pts.length; i++) {
-          const prev = pts[i-1], next = pts[i+1];
-          const hasTime = pts[i].time;
-          if (next) {
-            const dist = haversine(pts[i].lat, pts[i].lon, next.lat, next.lon);
-            if (hasTime && next.time && next.time > pts[i].time) {
-              const dt = (next.time - pts[i].time) / 1000;
-              pts[i].speed = (dist / dt) * 3.6;
-            } else {
-              pts[i].speed = null; // bez času → neznámá rychlost
-            }
+          if (hasGpxSpeed) {
+            pts[i].speed = (pts[i].gpxSpeed !== null && !isNaN(pts[i].gpxSpeed))
+              ? pts[i].gpxSpeed * 3.6
+              : null;
           } else {
-            pts[i].speed = pts[i-1]?.speed ?? null;
+            const next = pts[i+1];
+            if (next) {
+              const dist = haversine(pts[i].lat, pts[i].lon, next.lat, next.lon);
+              if (pts[i].time && next.time && next.time > pts[i].time) {
+                const dt = (next.time - pts[i].time) / 1000;
+                pts[i].speed = (dist / dt) * 3.6;
+              } else {
+                pts[i].speed = null;
+              }
+            } else {
+              pts[i].speed = pts[i-1]?.speed ?? null;
+            }
           }
         }
         if (pts.length > 1 && pts[0].speed === null) pts[0].speed = pts[1].speed;
@@ -777,7 +784,7 @@
             const marker = L.marker([pt.lat, pt.lon], { icon }).addTo(map);
             marker.bindPopup(`
               <div style="font-family:'Space Mono',monospace;font-size:12px;line-height:1.8;min-width:160px;">
-                <div style="font-size:15px;font-weight:700;color:${color};">⚡ ${pt.speed.toFixed(1)} km/h</div>
+                <div style="font-size:15px;font-weight:700;color:${color};">⚡ ${pt.speed.toFixed(1)} km/h <span style="font-size:10px;color:#aaa;font-weight:400;">${hasGpxSpeed ? 'F' : 'C'}</span></div>
                 <div style="color:#aaa;font-size:10px;">#${idx+1} nejvyšší rychlost</div>
                 <hr style="border-color:#333;margin:5px 0;">
                 <div>📅 ${timeStr}</div>
