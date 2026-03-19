@@ -542,7 +542,7 @@
 
     if (!last || moved > 3) {
       if (last) totalDist += moved;
-      trackPoints.push({ lat, lon, alt, time, accuracy });
+      trackPoints.push({ lat, lon, alt, time, accuracy, speed: speedKmh });
 
       const latlngs = trackPoints.map(p => [p.lat, p.lon]);
       if (polyline) {
@@ -634,9 +634,10 @@
     <name>${name}</name>
     <trkseg>\n`;
     for (const pt of trackPoints) {
-      const altTag = pt.alt != null ? `\n        <ele>${pt.alt.toFixed(1)}</ele>` : '';
+      const altTag   = pt.alt   != null ? `\n        <ele>${pt.alt.toFixed(1)}</ele>` : '';
+      const speedTag = pt.speed != null ? `\n        <speed>${(pt.speed / 3.6).toFixed(4)}</speed>` : '';
       gpx += `      <trkpt lat="${pt.lat.toFixed(8)}" lon="${pt.lon.toFixed(8)}">${altTag}
-        <time>${pt.time.toISOString()}</time>
+        <time>${pt.time.toISOString()}</time>${speedTag}
       </trkpt>\n`;
     }
     gpx += `    </trkseg>\n  </trk>\n</gpx>`;
@@ -922,9 +923,10 @@
     <n>${name}</n>
     <trkseg>\n`;
     for (const pt of trackPoints) {
-      const altTag = pt.alt != null ? `\n        <ele>${pt.alt.toFixed(1)}</ele>` : '';
+      const altTag   = pt.alt   != null ? `\n        <ele>${pt.alt.toFixed(1)}</ele>` : '';
+      const speedTag = pt.speed != null ? `\n        <speed>${(pt.speed / 3.6).toFixed(4)}</speed>` : '';
       gpx += `      <trkpt lat="${pt.lat.toFixed(8)}" lon="${pt.lon.toFixed(8)}">${altTag}
-        <time>${pt.time.toISOString()}</time>
+        <time>${pt.time.toISOString()}</time>${speedTag}
       </trkpt>\n`;
     }
     gpx += `    </trkseg>\n  </trk>\n</gpx>`;
