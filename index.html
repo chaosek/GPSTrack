@@ -816,6 +816,7 @@
         let dist = 0;
         for (let i = 1; i < pts.length; i++) dist += haversine(pts[i-1].lat, pts[i-1].lon, pts[i].lat, pts[i].lon);
         const km = (dist/1000).toFixed(2);
+        document.getElementById('statDist').textContent = dist < 1000 ? Math.round(dist) + ' m' : km + ' km';
         const maxStr = hasSpeedData ? `, max ${maxSpeed.toFixed(1)} km/h` : '';
         showToast(`Načteno ${pts.length} bodů, ${km} km${maxStr}`);
 
